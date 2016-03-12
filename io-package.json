@@ -1,0 +1,27 @@
+{
+  "common": {
+    "name": "cec",
+    "version": "0.0.1",
+    "title": "HDMI CEC",
+    "desc": {
+      "en": "HDMI CEC Devices",
+      "de": "HDMI CEC Geraete",
+      "ru": "HDMI CEC Devices"
+    },
+    "platform": "Javascript/Node.js",
+    "mode": "daemon",
+    "icon": "cec.png",
+    "extIcon": "https://raw.githubusercontent.com/soef/iobroker.cec/master/admin/cec.png",
+    "readme": "https://github.com/soef/iobroker.cec/blob/master/README.md",
+    "loglevel": "info",
+    "type": "hardware"
+  },
+  "native": {
+    "name": "ioBroker",
+    "type": "r"
+  },
+  "instanceObjects": [
+  ],
+  "objects": [
+  ]
+}

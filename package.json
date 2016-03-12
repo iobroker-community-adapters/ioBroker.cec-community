@@ -1,0 +1,35 @@
+{
+  "name": "iobroker.cec",
+  "version": "0.0.1",
+  "description": "HDMI CEC Adapter",
+  "author": {
+    "name": "soef",
+    "email": "soef@gmx.net"
+  },
+  "contributors": [
+    {
+      "name": "soef",
+      "email": "soef@gmx.net"
+    }
+  ],
+  "homepage": "https://github.com/soef/iobroker.cec",
+  "license": "MIT",
+  "keywords": [
+    "ioBroker",
+    "cec",
+    "hdmi"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/soef/iobroker.cec"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {},
+  "bugs": {
+    "url": "https://github.com/soef/iobroker.cec/issues"
+  },
+  "readmeFilename": "README.md",
+  "main": "cec.js"
+
+}
