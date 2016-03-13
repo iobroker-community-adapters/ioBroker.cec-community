@@ -58,7 +58,6 @@ var adapter = utils.adapter({
     stateChange: function (id, state) {
         if (state && !state.ack) {
             stateChange(id, state);
-            //cec.checkPowerState();
         }
     },
     ready: function () {
@@ -258,7 +257,10 @@ function NODECec (clientName) {
     function onClose () {
         //this.emit('stop', this);
         //this.client.kill('SIGINT');
-        process.exit();
+        adapter.log.error('Exiting...');
+        setTimeout(function() {
+            process.exit();
+        }, 500);
     }
 
     NODECec.prototype.start = function(_args) {
@@ -435,9 +437,6 @@ function NODECec (clientName) {
     };
 
     NODECec.prototype.onMessage = function (msg) {
-        if (msg === undefined) {
-            var s = msg;
-        }
         adapter.log.debug('onMessage: ' + msg.source + '->' + msg.target + ' ' + CEC.getOpcodeName(msg.opcode) +  ' ' + msg.tokens.join(':'));
 
         if (msg.args.length < CEC.responseLength(msg.opcode)) {
@@ -560,7 +559,6 @@ function NODECec (clientName) {
     };
 
     var ladTimer = null;
-    //var reLine2 = /(TRAFFIC:)(?:.*) ([0-9a-f:]*)$|^(.*?)(?:\s)([0-9A-Fa-f])(?:\s)(.*)|([^#|:]{0,20})/;
     var reLine2 = /(TRAFFIC:)(?:.*) ([0-9a-f:]*)$|^(.*?)(?:\s)([0-9A-Fa-f])(?:\s|$)(.*)|([^#|:]{0,20})/;
 
     NODECec.prototype.onLine = function(line) {
@@ -585,6 +583,11 @@ function NODECec (clientName) {
                     }
                     return this.onMessage(msg);
                 }
+                break;
+
+            case 'unable to open the d': //unable to open the device on port RPI
+                adapter.log.error(line);
+                adapter.log.error('Try to restart your raspberry with a connected HDMI cable.');
                 break;
 
             case 'listing active devices': //if (line.indexOf('listing active devices:' == 0)) {
@@ -728,7 +731,7 @@ function stateChange(id, state) {
 
 
 function createRootObjects() {
-    var l_dev = new devices.CDevice(); //root;
+    var l_dev = new devices.CDevice();
     for (var i in commonStates) {
         switch(commonStates[i]) {
             case commonStates.ACTIVE_SOURCE:
