@@ -1,11 +1,5 @@
 ﻿"use strict";
 
-//sudo vi /boot/config.txt
-//als setze Zeie folgendes einfügen:
-//hdmi_ignore_cec_init=1
-
-//node --debug-brk cec.js --force
-
 var utils = require(__dirname + '/lib/utils'),
     spawn = require('child_process').spawn,
     soef = require(__dirname + '/lib/soef'),
@@ -17,7 +11,19 @@ var cec,
     g_initCount = 0,
     ownLogicalAddress = { i: -1, c: 'e' };
 
-var OR_OSD_NAME = 'ioBroker';
+var orOSDName = 'ioBroker';
+
+function buildOrOSDName() {
+    orOSDName = adapter.config.name || orOSDName;
+    //if (adapter.config.name != orOSDName) {
+    //    orOSDName = adapter.config.name;
+    //    return;
+    //}
+    //var os = require('os');
+    //var hostName = os.hostname();
+    //
+    //orOSDName += '-' + hostName;
+}
 
 function bo(val) {
     return ((val >> 0) ? true : false);
@@ -62,6 +68,7 @@ var adapter = utils.adapter({
         //    });
         //});
         devices.init(adapter, function(err) {
+            buildOrOSDName();
             main();
         });
     }
@@ -95,7 +102,7 @@ var cecDevices = {
     //set: function (id, prop, val) {
     //    id = this.id2(id);
     //    if (id > 15) return;
-    //    console.log('-------- set: ' + id + '.' + prop + ' = ' + val);
+    //    adapter.log.debug('-------- set: ' + id + '.' + prop + ' = ' + val);
     //    var o = this.list.get(id);
     //    if (o === undefined) {
     //        o = {};
@@ -135,7 +142,7 @@ var cecDevices = {
     set: function (id, prop, val) {
         id = this.id2(id);
         if (id > 15) return;
-        console.log('-------- set: ' + id + '.' + prop + ' = ' + val);
+        adapter.log.debug('-------- set: ' + id + '.' + prop + ' = ' + val);
         var o = this.list[id];
         if (o === undefined) {
             o = {};
@@ -144,7 +151,7 @@ var cecDevices = {
         o[prop] = val;
 
         var d = g_dev.dset(id.toString(16), prop, val);
-        if (g_initCount >= 10 && d !== undefined /*&& g_dev.list.length > 0*/) {
+        if (g_initCount >= 10 && d !== undefined) {
             g_dev.update();
         }
     },
@@ -257,7 +264,6 @@ function NODECec (clientName) {
     NODECec.prototype.start = function(_args) {
 
         var args = _args.split(' ');
-        //var args = Array.prototype.slice.call(arguments);
         this.client = spawn(clientName, args);
         this.client.on('close', onClose);
         this.client.stdout.on('data', onData);
@@ -286,7 +292,7 @@ function NODECec (clientName) {
     function setTimer() {
         clearTimer();
         timer = setTimeout(function () {
-            console.log('###################### called by timer ==> ' + lastSnd + ' opcode: ' + CEC.getOpcodeName(waitFor) + ' ' + waitFor.toString(16));
+            adapter.log.debug('###################### called by timer ==> ' + lastSnd + ' opcode: ' + CEC.getOpcodeName(waitFor) + ' ' + waitFor.toString(16));
             that._pop();
         }, 5000);
     }
@@ -295,17 +301,17 @@ function NODECec (clientName) {
     };
 
     NODECec.prototype.popWaitingForInput = function () {
-        console.log('~~~~ pop from waiting for Input');
+        //adapter.log.debug('~~~~ pop from waiting for Input');
         this._pop();
     };
 
     NODECec.prototype.popOnLine = function (opcode) {
-        console.log('~~~~ pop from onLine');
+        //adapter.log.debug('~~~~ pop from onLine');
         this._pop(opcode);
     };
 
     NODECec.prototype._pop = function (opcode) {
-        console.log('pop called: opcode=' + opcode + ' ready=' + ready);
+        adapter.log.debug('pop called: opcode=' + opcode + ' ready=' + ready);
         if (ready) return;
         if (opcode !== undefined && waitFor != '') {
             if (opcode !== waitFor) {
@@ -322,12 +328,12 @@ function NODECec (clientName) {
         } else {
             clearTimer();
             ready = true;
-            console.log('pop called: ready=' + ready);
+            adapter.log.debug('pop called: ready=' + ready);
             if (sendCallback) {
                 var cb = sendCallback;
                 sendCallback = null;
                 cb();
-                console.log(':::::::::::::::::: pop: callback called=' + cb.name);
+                adapter.log.debug(':::::::::::::::::: pop: callback called=' + cb.name);
             }
         }
     };
@@ -335,9 +341,9 @@ function NODECec (clientName) {
     NODECec.prototype.snd = function (msg) {
         msg = msg.replace('%o', ownLogicalAddress.c);
         if (msg.indexOf('tx') === 0) {
-            console.log('snd: ' + msg[3] + '->' + msg[4] + ' ' + CEC.getOpcodeName(msg.substr(6,2)) + ' ' + msg);
+            adapter.log.debug('snd: ' + msg[3] + '->' + msg[4] + ' ' + CEC.getOpcodeName(msg.substr(6,2)) + ' ' + msg);
         } else {
-            console.log('snd: --> ' + msg);
+            adapter.log.debug('snd: --> ' + msg);
         }
         lastSnd = msg;
         that.client.stdin.write(msg);
@@ -346,12 +352,12 @@ function NODECec (clientName) {
 
     NODECec.prototype.send = function (msg) {
         if (!ready && g_initCount < 10) {
-            console.log('send -> push -> ' + msg);
+            //adapter.log.debug('send -> push -> ' + msg);
             queue.push(msg);
             if (!timer) setTimer();
         } else {
             ready = false;
-            console.log('ready=false');
+            //adapter.log.debug('ready=false');
             that.snd(msg);
         }
     };
@@ -404,14 +410,14 @@ function NODECec (clientName) {
         var dev = g_dev;
         cecDevices.forEach(function (i, o) {
             //i = i.toString(16);
-            console.log('device: ' + i + ' ' + o.osd ? o.osd : o.vendor ? o.vendor : i);
+            //adapter.log.debug('device: ' + i + ' ' + o.osd ? o.osd : o.vendor ? o.vendor : i);
             for (var j in o) {
-                console.log('devive.' + i + ': j: ' + j + ' =' + o[j]);
+                //adapter.log.debug('devive.' + i + ': j: ' + j + ' =' + o[j]);
                 dev.dset(i, j, o[j]);
             }
             dev.setObjectName(i, o.osd ? o.osd : o.vendor ? o.vendor : i);
         });
-        dev.setObjectName(ownLogicalAddress.c, adapter.config.name || OR_OSD_NAME);
+        dev.setObjectName(ownLogicalAddress.c, orOSDName);
         dev.update();
     }
 
@@ -432,7 +438,7 @@ function NODECec (clientName) {
         if (msg === undefined) {
             var s = msg;
         }
-        console.log('onMessage: ' + msg.source + '->' + msg.target + ' ' + CEC.getOpcodeName(msg.opcode) +  ' ' + msg.tokens.join(':'));
+        adapter.log.debug('onMessage: ' + msg.source + '->' + msg.target + ' ' + CEC.getOpcodeName(msg.opcode) +  ' ' + msg.tokens.join(':'));
 
         if (msg.args.length < CEC.responseLength(msg.opcode)) {
             return;
@@ -454,7 +460,7 @@ function NODECec (clientName) {
                 var key = CEC.userControlCodes.get(msg.args[0]);
                 devices.root.rset(commonStates.KEY_UP, key);
                 devices.root.rset(commonStates.KEY_DOWN, '');
-                console.log("KEY_UP: " + key);
+                adapter.log.debug("KEY_UP: " + key);
                 break;
 
             case CEC.CEC_OPCODE.VENDOR_REMOTE_BUTTON_DOWN:
@@ -464,7 +470,7 @@ function NODECec (clientName) {
                 var key = CEC.userControlCodes.get(msg.args[0]);
                 devices.root.rset(commonStates.KEY_DOWN, key);
                 devices.root.rset(commonStates.KEY_UP, '');
-                console.log("KEY_DOWN: " + key);
+                adapter.log.debug("KEY_DOWN: " + key);
                 break;
 
             case CEC.CEC_OPCODE.USER_CONTROL_RELEASE:
@@ -559,7 +565,7 @@ function NODECec (clientName) {
 
     NODECec.prototype.onLine = function(line) {
 
-        console.log("onLine: " + line);
+        adapter.log.debug("onLine: " + line);
 
         var al = reLine2.exec(line);
         switch(al[1] || al[3] || al[6]) {
@@ -596,7 +602,7 @@ function NODECec (clientName) {
                 break;
 
             case 'waiting for input':
-                console.log('**** waiting for input');
+                adapter.log.debug('**** waiting for input');
                 if (g_initCount === 0) {
                     g_initCount = 1;
                     setTimeout(listActiveDevices, 200);
@@ -609,7 +615,7 @@ function NODECec (clientName) {
                 //var idold = x2d(line.substr(19, 1));
                 var id = x2d(al[4]);
                 //if (id !== idold) {
-                //    console.log('! ! ! ! ! ! ! ! OSD name of device id?')
+                //    adapter.log.debug('! ! ! ! ! ! ! ! OSD name of device id?')
                 //}
                 var name = line.slice(25, -1);
                 cecDevices.setOSD(id, name);
@@ -740,11 +746,12 @@ function createRootObjects() {
 
 
 function main() {
-
     createRootObjects();
 
     cec = new NODECec();
-    cec.start('-d 8 -t p -b r -o ' + adapter.config.name || OR_OSD_NAME);
+    cec.start('-d 8 -t p -b r -o ' + orOSDName);
 
     adapter.subscribeStates('*');
 }
+
+//node --debug-brk cec.js --force
