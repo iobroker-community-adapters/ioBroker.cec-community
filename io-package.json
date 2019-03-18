@@ -1,6 +1,6 @@
 {
   "common": {
-    "name": "cec",
+    "name": "cec-community",
     "version": "0.0.3",
     "title": "HDMI CEC",
     "desc": {
