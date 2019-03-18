@@ -24,12 +24,18 @@
     "url": "https://github.com/soef/iobroker.cec"
   },
   "dependencies": {
+    "@iobroker/adapter-core": "^1.0.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "mocha": "^6.0.2",
+    "chai": "^4.2.0"
+  },
   "bugs": {
     "url": "https://github.com/soef/iobroker.cec/issues"
   },
   "readmeFilename": "README.md",
-  "main": "cec.js"
-
+  "main": "cec.js",
+  "scripts": {
+    "test": "node node_modules/mocha/bin/mocha --exit"
+  }
 }
