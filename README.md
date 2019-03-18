@@ -1,6 +1,6 @@
 ![Logo](admin/cec.png)
 ### ioBroker.cec
-
+![Number of Installations](http://iobroker.live/badges/cec-community-installed.svg) ![Stable Version](http://iobroker.live/badges/cec-community-stable.svg) 
 Adapter for HDMI CEC
 
 #### Info
